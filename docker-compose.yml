@@ -1,0 +1,60 @@
+version: "3.7"
+services:
+    web-student:
+        build: .
+        restart: always
+        ports: 
+            - "7000:80"
+        container_name: web-student
+        volumes:
+            - ./www:/var/www/html/
+        depends_on:
+            - mysql-student
+        networks: 
+            - web_php
+    mysql-student:
+        image: mysql:5.7
+        ports: 
+            - 3307:3306
+        container_name: mysql-student
+        restart: always
+        environment:
+            MYSQL_DATABASE: istudent_db
+            MYSQL_USER: admin
+            MYSQL_PASSWORD: A12345678
+            MYSQL_ROOT_PASSWORD: A12345678
+        volumes:
+            - ./:/docker-entrypoint-initdb.d
+            - mysql_student_data:/var/lib/mysql
+        networks:
+            - web_php
+    phpmyadmin-student:
+        image: phpmyadmin/phpmyadmin
+        container_name: phpmyadmin-student
+        restart: always
+        depends_on: 
+            - mysql-student
+        ports:
+            - 8880:80
+        environment:
+            MYSQL_USER: admin
+            MYSQL_PASSWORD: A123345678
+            MYSQL_ROOT_PASSWORD: A123345678
+            PMA_HOST: mysql-student
+        networks:
+            - web_php
+    # zaproxy:
+    #     image: owasp/zap2docker-stable
+    #     # zap-cli quick-scan --self-contained     --start-options '-config api.disablekey=true' http://127.0.0.1:8001
+    #     # sudo docker run -i owasp/zap2docker-stable zap-cli quick-scan --self-contained     --start-options '-config api.disablekey=true' http://127.0.0.1:8001
+    #     command: zap.sh -daemon -port 8090 -host web
+    #     expose:
+    #     # ZAP is running on 8090, we want it to be accessible by our tools        
+    #         - "8090"
+    #     depends_on:
+    #         - web
+volumes:
+    mysql_student_data:
+networks: 
+    web_php:
+        external: true
